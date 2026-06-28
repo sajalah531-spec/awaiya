@@ -1,86 +1,39 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Awa - Temen Ngobrol AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .chat-scroll::-webkit-scrollbar { width: 6px; }
-    .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWA AI Chat</title>
+<style>
+:root { --purple: #7c3aed; --pink: #a855f7; --dark: #0b0b0b; --card: #1c1c1c; }
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', system-ui, sans-serif; }
+body { background: radial-gradient(1200px 600px at 80% -10%, #1a0033 0%, var(--dark) 60%); color:#fff; height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
+.chat-wrapper { width:100%; max-width:600px; height:90vh; background: rgba(20,20,20,0.6); backdrop-filter: blur(20px); border:1px solid rgba(124,58,237,0.3); border-radius:24px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 0 40px #7c3aed33; }
+.header { display:flex; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.1); }
+.avatar { width:44px; height:44px; border-radius:50%; border:2px solid var(--pink); box-shadow:0 0 15px var(--pink); object-fit: cover; } /* object-fit biar gak gepeng */
+.header h3 { font-size:18px; } .header span { font-size:12px; color:#22c55e; }
+.messages { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+.bubble { padding:14px 18px; border-radius:18px; max-width:85%; line-height:1.5; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+.bot { background: var(--card); border:1px solid rgba(124,58,237,0.2); border-radius:18px 18px 18px 6px; align-self:flex-start; }
+.user { background: linear-gradient(135deg, var(--purple), var(--pink)); border-radius:18px 18px 6px 18px; align-self:flex-end; }
+.input-area { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); display:flex; gap:10px; }
+.input-area input { flex:1; padding:14px 18px; border-radius:24px; border:1px solid rgba(255,255,255,0.1); background: var(--card); color:#fff; outline:none; }
+.input-area input:focus { border-color:var(--purple); box-shadow:0 0 10px var(--purple); }
+.input-area button { padding:14px 24px; border-radius:24px; border:none; background: var(--purple); color:#fff; font-weight:600; cursor:pointer; transition:.2s; }
+.input-area button:hover { background: var(--pink); transform:scale(1.05); }
+</style>
 </head>
-<body class="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 min-h-screen flex items-center justify-center p-4">
-
-  <div class="w-full max-w-lg bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border-white/20 flex-col h-[85vh]">
-    
-    <!-- Header -->
-    <div class="p-4 border-b border-white/20 flex items-center gap-3 shrink-0">
-      <img src="https://i.pravatar.cc/100?img=47" class="w-12 h-12 rounded-full border-2 border-white/30">
-      <div>
-        <h1 class="font-bold text-xl text-white">Awa</h1>
-        <p class="text-xs text-green-300 flex items-center gap-1"><span class="w-2 h-2 bg-green-300 rounded-full animate-pulse"></span> Online</p>
-      </div>
-    </div>
-
-    <!-- Chat Area -->
-    <div id="chat" class="flex-1 p-5 overflow-y-auto chat-scroll space-y-4"></div>
-
-    <!-- Input Area -->
-    <div class="p-4 border-t border-white/20 shrink-0">
-      <div class="flex gap-2 items-center bg-white/20 rounded-2xl p-2">
-        <input id="msg" type="text" placeholder="Mau curhat apa?" onkeydown="if(event.key==='Enter') send()"
-               class="flex-1 bg-transparent text-white placeholder-white/70 focus:outline-none px-3">
-        <button onclick="send()" class="bg-white text-indigo-600 p-3 rounded-xl hover:bg-white/90 active:scale-95 transition">
-          <i data-lucide="send" class="w-5 h-5"></i>
-        </button>
-      </div>
+<body>
+<div class="chat-wrapper">
+  <div class="header">
+    <img class="avatar" src="./public/logo.png" alt="AWA Logo"> <!-- UDAH GUE GANTI -->
+    <div>
+      <h3>AWA AI</h3>
+      <span>Online</span>
     </div>
   </div>
-
-  <script>
-    lucide.createIcons();
-    const API_URL = "/api/chat";
-    const chat = document.getElementById('chat');
-    const msgInput = document.getElementById('msg');
-    const USER_ID = "user-" + Math.random().toString(36).substr(2, 9);
-
-    function addMsg(text, sender) {
-      const div = document.createElement('div');
-      div.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
-      div.innerHTML = `<div class="max-w-[80%] p-3 rounded-2xl shadow ${sender === 'user' ? 'bg-gradient-to-br from-indigo-400 to-purple-500 text-white rounded-br-none' : 'bg-white/90 text-gray-800 rounded-bl-none'}">${text}</div>`;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    async function send() {
-      const text = msgInput.value.trim();
-      if (!text) return;
-      addMsg(text, 'user');
-      msgInput.value = '';
-      
-      const typing = document.createElement('div');
-      typing.className = 'flex justify-start';
-      typing.innerHTML = `<div class="bg-white/90 text-gray-800 p-3 rounded-2xl rounded-bl-none">...</div>`;
-      chat.appendChild(typing);
-      
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ inputs: {}, query: text, response_mode: "blocking", user: USER_ID })
-        });
-        const data = await res.json();
-        typing.remove();
-        addMsg(data.answer || "Awa lagi pusing nih 😅", 'bot');
-      } catch (e) {
-        typing.remove();
-        addMsg("Waduh error. Cek API key udah bener?", 'bot');
-      }
-    }
-  </script>
-</body>
-</html>
+  <div class="messages">
+    <div class="bubble bot">Halo! Gue AWA, AI assistant lu. Mau tanya apa hari ini?</div>
+    <div class="bubble user">Ganti tampilan dong</div>
+    <div class="bubble bot">Nah ini udah paling pro
