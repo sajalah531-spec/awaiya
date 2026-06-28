@@ -43,7 +43,7 @@
   </div>
 
 <script>
-const API_KEY = "app-xxxxxxxxxxxxxxxxxxxx"; // GANTI INI PAKE API KEY DIFY LU
+const API_KEY = "app-3oNbq59PxQhW8epjZSOeVfAF"; // GANTI INI PAKE API KEY DIFY LU
 const API_URL = "https://api.dify.ai/v1/chat-messages";
 const USER_ID = "user-" + Math.random().toString(36).substring(2, 9);
 
@@ -69,4 +69,45 @@ function showTyping() {
   const wrapper = document.createElement("div");
   wrapper.id = "typing";
   wrapper.className = `flex justify-start`;
-  wrapper.innerHTML = `<div class="p-3 rounded-2xl bg-white/20 rounded-bl-none flex gap-1"><span class="typing-dot w-2 h-2 bg-white/70 rounded-full"></span><span class="typing-dot w-2 h-2 bg-white/70 rounded-full"></span><span class="typing-dot w-
+  wrapper.innerHTML = `<div class="p-3 rounded-2xl bg-white/20 rounded-bl-none flex gap-1"><span class="typing-dot w-2 h-2 bg-white/70 rounded-full"></span><span class="typing-dot w-2 h-2 bg-white/70 rounded-full"></span><span class="typing-dot w-2 h-2 bg-white/70 rounded-full"></span></div>`;
+  chatBox.appendChild(wrapper);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function send() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMsg(text, 'user');
+  input.value = "";
+  showTyping();
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + API_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        inputs: {},
+        query: text,
+        response_mode: "blocking",
+        user: USER_ID
+      })
+    });
+
+    document.getElementById("typing").remove();
+    if (!res.ok) throw new Error("Error");
+
+    const data = await res.json();
+    addMsg(data.answer, 'ai');
+
+  } catch (err) {
+    document.getElementById("typing").remove();
+    addMsg("Waduh Sahabat Awa lagi error. Mungkin lagi istirahat 😅", 'ai');
+  }
+}
+</script>
+</body>
+</html>
